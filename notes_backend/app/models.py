@@ -298,6 +298,20 @@ class StorageService:
         return self.get_note(note_id)  # type: ignore
 
     # PUBLIC_INTERFACE
+    def soft_restore(self, note_id: str) -> Optional[Dict[str, Any]]:
+        """Restore a soft-archived note by setting archived = False. Returns updated note or None."""
+        existing = self.get_note(note_id)
+        if not existing:
+            return None
+        with self._get_conn() as conn:
+            conn.execute(
+                "UPDATE notes SET archived = 0, updated_at = ? WHERE id = ?;",
+                (_now_iso(), note_id),
+            )
+            conn.commit()
+        return self.get_note(note_id)  # type: ignore
+
+    # PUBLIC_INTERFACE
     def search(self, query: str, include_archived: bool = False, page: int = 1, page_size: int = 20) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
         """
         Simple LIKE-based search across title, content, and tags.
