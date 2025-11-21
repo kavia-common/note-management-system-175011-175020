@@ -2,7 +2,10 @@ from flask import Flask
 from flask_cors import CORS
 from .routes.health import blp
 from flask_smorest import Api
+import os
 
+# Local storage service
+from .models import StorageService
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -14,6 +17,12 @@ app.config['OPENAPI_URL_PREFIX'] = '/docs'
 app.config["OPENAPI_SWAGGER_UI_PATH"] = ""
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
-
+# Initialize API
 api = Api(app)
 api.register_blueprint(blp)
+
+# Initialize storage and attach to app extensions for later use by routes
+# NOTES_DB_PATH may be provided via environment variables (managed outside code)
+db_path = os.getenv("NOTES_DB_PATH")
+app.extensions = getattr(app, "extensions", {})
+app.extensions["storage_service"] = StorageService(db_path=db_path)
